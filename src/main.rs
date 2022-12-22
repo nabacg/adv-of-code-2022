@@ -63,6 +63,8 @@ fn day1_result(lines: Vec<String>)-> Result<(), Box<dyn Error>>  {
 }
 
 // DAY 1 END 
+
+#[derive(Debug, Clone)]
 pub enum Shape {
     Rock,
     Paper,
@@ -88,6 +90,20 @@ impl Shape {
         }
     }
 
+    pub fn from_expected_result(r: &GameResult, opponent_move: &Shape) -> Result<Shape, String> {
+        let simulated_game = vec![Shape::Rock, Shape::Paper, Shape::Scissors].iter().map(|p2|{
+            Game{
+                player_1: opponent_move.clone(),
+                player_2: p2.clone(),
+            }
+        }).filter(|g| &g.player_2_result() == r).take(1).next(); 
+        if let Some(matching_game) = simulated_game {
+            Ok(matching_game.player_2)
+        } else {
+            Err("Couldn't simulate a expected move to match oppenent_move and produce expected game_result".to_string()) //, opponent_move, r).as_str())
+        }
+    }
+
     pub fn score(&self) -> i32 {
         match self {
             Shape::Rock => 1,
@@ -97,6 +113,7 @@ impl Shape {
     }
 }
 
+#[derive(PartialEq, Debug)]
 pub enum GameResult {
     Lose,
     Draw,
@@ -109,6 +126,15 @@ impl GameResult {
             GameResult::Lose => 0,
             GameResult::Draw => 3,
             GameResult::Win  => 6,
+        }
+    }
+
+    pub fn from_secret_code(c: &str) -> Result<GameResult, &str> {
+        match c {
+            "X" => Ok(GameResult::Lose),
+            "Y" => Ok(GameResult::Draw),
+            "Z" => Ok(GameResult::Win),
+            _   => Err("invalid secret result code, only X, Y and Z are supported!")
         }
     }
 }
@@ -124,7 +150,9 @@ impl Game {
         match parts[..] {
             [left, right] => { 
                 let l_hand =   Shape::from_plain_code(left)?;
-                let r_hand = Shape::from_secret_code(right)?;
+                // let r_hand = Shape::from_secret_code(right)?;
+                let expected_result = GameResult::from_secret_code(right)?;
+                let r_hand = Shape::from_expected_result(&expected_result, &l_hand)?;
                 Ok(Game{
                     player_1: l_hand,
                     player_2: r_hand,
