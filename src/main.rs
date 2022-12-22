@@ -55,23 +55,6 @@ fn parse_elves(lines: Vec<String>) -> Result<ElfExpedition, Box<dyn Error>> {
 }
 
 
-fn read_lines2(input_path: &str) -> Result<Vec<String>, std::io::Error> {
-    let input_file = fs::File::open(input_path)?;
-    let lines = BufReader::new(input_file).lines()
-    .fold(Ok(vec![]), |acc, l|{
-        match (acc, l) {
-            (Ok(mut acc), Ok(l)) => {
-                acc.push(l);
-                Ok(acc)
-            },
-            (Ok(_), Err(e)) => Err(e),
-            (Err(e), Ok(_)) => Err(e),
-            (Err(e), Err(_)) => Err(e), // let's say the first error wins
-            
-        }
-    });
-    lines
-}
 
 fn read_lines(input_path: &str) -> Result<Vec<String>, std::io::Error> {
     let input_file = fs::File::open(input_path)?;
@@ -82,12 +65,12 @@ fn read_lines(input_path: &str) -> Result<Vec<String>, std::io::Error> {
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<String> = env::args().collect();
-    let input_path =    "test_input.txt";
-    // if args.len() < 2 {
-    //     eprintln!("1 cmd argument required: provide path to the input file");
-    //     process::exit(1);
-    // }
-    // let input_path = &args[1];
+    // let input_path =    "test_input.txt";
+    if args.len() < 2 {
+        eprintln!("1 cmd argument required: provide path to the input file");
+        process::exit(1);
+    }
+    let input_path = &args[1];
 
     let lines = read_lines(input_path)?;
     let mut elves = parse_elves(lines)?;
