@@ -1,6 +1,12 @@
-use std::{fs::{self}, io::{BufReader, BufRead}, env, error::Error, process};
+use std::{
+    env,
+    error::Error,
+    fs::{self},
+    io::{BufRead, BufReader},
+    process,
+};
 
-// DAY 1 
+// DAY 1
 struct Elf {
     calories: i32,
 }
@@ -12,7 +18,10 @@ struct ElfExpedition {
 
 impl ElfExpedition {
     pub fn new() -> ElfExpedition {
-        return ElfExpedition { elves: vec![], elf_candidate: vec![] }
+        return ElfExpedition {
+            elves: vec![],
+            elf_candidate: vec![],
+        };
     }
 
     fn pack_snack(&mut self, s: i32) {
@@ -24,47 +33,47 @@ impl ElfExpedition {
             return;
         }
         let calorie_total = self.elf_candidate.iter().sum();
-        self.elves.push(Elf{calories: calorie_total});
+        self.elves.push(Elf {
+            calories: calorie_total,
+        });
         self.elf_candidate.clear();
     }
 
     fn top_three_total(&mut self) -> i32 {
-        self.elves.sort_by(|a,b| b.calories.cmp(&a.calories));
+        self.elves.sort_by(|a, b| b.calories.cmp(&a.calories));
         self.elves.iter().take(3).map(|e| e.calories).sum()
     }
 }
 
-
 fn parse_elves(lines: Vec<String>) -> Result<ElfExpedition, Box<dyn Error>> {
-    let mut elves = lines.iter().fold(ElfExpedition::new(), |mut acc, l| {
-        match l {
-            l if l.len() == 0 => { 
+    let mut elves = lines
+        .iter()
+        .fold(ElfExpedition::new(), |mut acc, l| match l {
+            l if l.len() == 0 => {
                 acc.pack_elf();
                 acc
-            },
+            }
             l => {
                 let cals = l.parse::<i32>().unwrap();
                 acc.pack_snack(cals);
                 acc
-            },
-        }
-
-    });
+            }
+        });
     //collect the last elf
     elves.pack_elf();
     Ok(elves)
 }
 
-fn day1_result(lines: Vec<String>)-> Result<(), Box<dyn Error>>  {
+fn day1_result(lines: Vec<String>) -> Result<(), Box<dyn Error>> {
     let mut elves = parse_elves(lines)?;
 
     println!("result is: {}", elves.top_three_total());
     Ok(())
 }
 
-// DAY 1 END 
+// DAY 1 END
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum Shape {
     Rock,
     Paper,
@@ -77,7 +86,7 @@ impl Shape {
             "A" => Ok(Shape::Rock),
             "B" => Ok(Shape::Paper),
             "C" => Ok(Shape::Scissors),
-            _   => Err("invalid plain code, only A, B and C are supported!")
+            _ => Err("invalid plain code, only A, B and C are supported!"),
         }
     }
 
@@ -86,21 +95,25 @@ impl Shape {
             "X" => Ok(Shape::Rock),
             "Y" => Ok(Shape::Paper),
             "Z" => Ok(Shape::Scissors),
-            _   => Err("invalid secret code, only X, Y and Z are supported!")
+            _ => Err("invalid secret code, only X, Y and Z are supported!"),
         }
     }
 
     pub fn from_expected_result(r: &GameResult, opponent_move: &Shape) -> Result<Shape, String> {
-        let simulated_game = vec![Shape::Rock, Shape::Paper, Shape::Scissors].iter().map(|p2|{
-            Game{
-                player_1: opponent_move.clone(),
-                player_2: p2.clone(),
-            }
-        }).filter(|g| &g.player_2_result() == r).take(1).next(); 
+        let simulated_game = vec![Shape::Rock, Shape::Paper, Shape::Scissors]
+            .iter()
+            .map(|p2| Game {
+                player_1: *opponent_move,
+                player_2: *p2,
+            })
+            .filter(|g| &g.player_2_result() == r)
+            .take(1)
+            .next();
         if let Some(matching_game) = simulated_game {
             Ok(matching_game.player_2)
         } else {
-            Err("Couldn't simulate a expected move to match oppenent_move and produce expected game_result".to_string()) //, opponent_move, r).as_str())
+            Err("Couldn't simulate a expected move to match oppenent_move and produce expected game_result".to_string())
+            //, opponent_move, r).as_str())
         }
     }
 
@@ -117,7 +130,7 @@ impl Shape {
 pub enum GameResult {
     Lose,
     Draw,
-    Win
+    Win,
 }
 
 impl GameResult {
@@ -125,7 +138,7 @@ impl GameResult {
         match self {
             GameResult::Lose => 0,
             GameResult::Draw => 3,
-            GameResult::Win  => 6,
+            GameResult::Win => 6,
         }
     }
 
@@ -134,7 +147,7 @@ impl GameResult {
             "X" => Ok(GameResult::Lose),
             "Y" => Ok(GameResult::Draw),
             "Z" => Ok(GameResult::Win),
-            _   => Err("invalid secret result code, only X, Y and Z are supported!")
+            _ => Err("invalid secret result code, only X, Y and Z are supported!"),
         }
     }
 }
@@ -146,9 +159,9 @@ pub struct Game {
 
 impl Game {
     pub fn from_input(line: &str) -> Result<Game, String> {
-        let parts:Vec<&str> = line.split_ascii_whitespace().collect();
+        let parts: Vec<&str> = line.split_ascii_whitespace().collect();
         match parts[..] {
-            [left, right] => { 
+            [left, right] => {
                 let l_hand =   Shape::from_plain_code(left)?;
                 // let r_hand = Shape::from_secret_code(right)?;
                 let expected_result = GameResult::from_secret_code(right)?;
@@ -178,32 +191,29 @@ impl Game {
     pub fn player_2_score(&self) -> i32 {
         self.player_2_result().score() + self.player_2.score()
     }
- }
+}
 
-
- fn day2_result(lines: Vec<String>) -> Result<(), Box<dyn Error>> {
+fn day2_result(lines: Vec<String>) -> Result<(), Box<dyn Error>> {
     let games: Result<Vec<Game>, String> = lines.iter().map(|l| Game::from_input(l)).collect();
     match games {
-        Ok(games) => { 
-           let scores: i32 = games.iter().map(|g| g.player_2_score()).sum();
-           println!("result is: {}", scores);           
-        },
-        Err(e) =>{
+        Ok(games) => {
+            let scores: i32 = games.iter().map(|g| g.player_2_score()).sum();
+            println!("result is: {}", scores);
+        }
+        Err(e) => {
             eprintln!("error processing input: {}", e);
-        },
+        }
     }
     Ok(())
- }
-// DAY 2 
-
+}
+// DAY 2
 
 fn read_lines(input_path: &str) -> Result<Vec<String>, std::io::Error> {
     let input_file = fs::File::open(input_path)?;
     let lines = BufReader::new(input_file).lines();
-    
+
     lines.collect()
 }
-
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<String> = env::args().collect();
@@ -226,5 +236,5 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
     }
     // day1_result(lines)
-//   day2_result(lines)
+    //   day2_result(lines)
 }
