@@ -1,9 +1,12 @@
 use std::{
+    arch::x86_64::_mm256_and_pd,
+    collections::{HashMap, HashSet},
     env,
     error::Error,
     fs::{self},
     io::{BufRead, BufReader},
-    process, collections::{HashSet, HashMap},
+    num::ParseIntError,
+    process,
 };
 
 // DAY 1
@@ -208,7 +211,7 @@ fn day2_result(lines: Vec<String>) -> Result<(), Box<dyn Error>> {
 }
 // DAY 2
 
-// DAY 3 
+// DAY 3
 #[derive(Debug)]
 pub struct Rucksack {
     compartment_a: Vec<char>,
@@ -218,10 +221,13 @@ pub struct Rucksack {
 impl Rucksack {
     pub fn from_input(l: &String) -> Result<Rucksack, &str> {
         if l.chars().count() % 2 != 0 {
-            return Err("Invalid input, only even character counts are supported")
+            return Err("Invalid input, only even character counts are supported");
         }
-        let (a, b) =    l.split_at(l.chars().count()/2);
-        Ok(Rucksack { compartment_a: a.chars().collect(), compartment_b: b.chars().collect() })
+        let (a, b) = l.split_at(l.chars().count() / 2);
+        Ok(Rucksack {
+            compartment_a: a.chars().collect(),
+            compartment_b: b.chars().collect(),
+        })
     }
 
     pub fn compartment_overlaps(&self) -> Vec<&char> {
@@ -230,20 +236,26 @@ impl Rucksack {
         // self.compartment_b.iter().for_each(|i| *item_count.entry(i).or_insert(0) += 1);
         // item_count.iter().filter(|(i, &c)| c > 1).map(|(i, _)| *i).collect()
 
-        let comp_a_set= HashSet::<_>::from_iter(self.compartment_a.iter());
-        let dedup = HashSet::<_>::from_iter(self.compartment_b.iter().filter(|b| comp_a_set.contains(b)));
+        let comp_a_set = HashSet::<_>::from_iter(self.compartment_a.iter());
+        let dedup =
+            HashSet::<_>::from_iter(self.compartment_b.iter().filter(|b| comp_a_set.contains(b)));
         dedup.iter().map(|c| *c).collect()
     }
 
     pub fn overlaps<'a>(&'a self, contents_b: &'a Vec<&char>) -> Vec<&'a char> {
         let self_invent = HashSet::<_>::from_iter(self.contents());
-        let other_invent = HashSet::<_>::from_iter(contents_b.iter().map(|i|*i));
-        self_invent.intersection(&other_invent).map(|c|*c).collect()        
+        let other_invent = HashSet::<_>::from_iter(contents_b.iter().map(|i| *i));
+        self_invent
+            .intersection(&other_invent)
+            .map(|c| *c)
+            .collect()
     }
 
-
     pub fn contents(&self) -> Vec<&char> {
-        self.compartment_a.iter().chain(self.compartment_b.iter()).collect()
+        self.compartment_a
+            .iter()
+            .chain(self.compartment_b.iter())
+            .collect()
     }
 
     pub fn item_priority(i: &char) -> u32 {
@@ -254,29 +266,30 @@ impl Rucksack {
         } else {
             ascii - 96
         }
-  
     }
 }
 
-
 fn intersection<'a>(contents_a: Vec<&'a char>, contents_b: Vec<&'a char>) -> Vec<&'a char> {
-    let self_invent = HashSet::<_>::from_iter(contents_a.iter().map(|i|*i));
-    let other_invent = HashSet::<_>::from_iter(contents_b.iter().map(|i|*i));
-    self_invent.intersection(&other_invent).map(|c|*c).collect()        
+    let self_invent = HashSet::<_>::from_iter(contents_a.iter().map(|i| *i));
+    let other_invent = HashSet::<_>::from_iter(contents_b.iter().map(|i| *i));
+    self_invent
+        .intersection(&other_invent)
+        .map(|c| *c)
+        .collect()
 }
 
 fn day3_result(lines: Vec<String>) -> Result<(), Box<dyn Error>> {
     let rucksacks: Result<Vec<Rucksack>, &str> = lines.iter().map(Rucksack::from_input).collect();
     match rucksacks {
-        Ok(rucksacks) => { 
+        Ok(rucksacks) => {
             // let misplaced_items: u32 = rucksacks.iter()
             //     .flat_map(|r| r.compartment_overlaps())
             //     .map(Rucksack::item_priority)
             //     .sum();
-                // let groups =        rucksacks.iter().next_chunk::<3>().expect("invalid input - number of lines need to be divisable by 3");
-                let group_badges: u32 = rucksacks.chunks(3).map(|g| {
+            // let groups =        rucksacks.iter().next_chunk::<3>().expect("invalid input - number of lines need to be divisable by 3");
+            let group_badges: u32 = rucksacks.chunks(3).map(|g| {
                     let group_overlaps = g.iter().map(|r|r.contents()).reduce(intersection).expect("Invalid input - empty elf group provided, expected 3 elves in each group.");
-                    
+
                     if group_overlaps.len() != 1 {
                         eprintln!("error processing input, only single badge should overlap in each group, got: {}", group_overlaps.len());
                         process::exit(1)
@@ -284,7 +297,6 @@ fn day3_result(lines: Vec<String>) -> Result<(), Box<dyn Error>> {
                     group_overlaps[0]
                 }).map(|i| Rucksack::item_priority(i)).sum();
 
-                
             println!("result is {}", group_badges);
         }
         Err(e) => {
@@ -296,14 +308,107 @@ fn day3_result(lines: Vec<String>) -> Result<(), Box<dyn Error>> {
 
 // DAY 3 END
 
+// DAY 4
+#[derive(Debug)]
+struct Section {
+    start: u32,
+    end: u32,
+}
+
+impl Section {
+    fn from_input(i: &str) -> Result<Section, Box<dyn Error>> {
+        let edges: Result<Vec<u32>, ParseIntError> =
+            i.split("-").map(|e| e.parse::<u32>()).collect();
+        let edges = edges?;
+        if edges.len() != 2 {
+            Err(format!(
+                "Invalid input, expected 2 part assigment separated by ',', got: {}",
+                i
+            )
+            .into())
+        } else {
+            Ok(Section {
+                start: edges[0],
+                end: edges[1],
+            })
+        }
+    }
+
+    fn contains(&self, another: &Section) -> bool {
+        self.start <= another.start && self.end >= another.end
+    }
+
+    fn left_overlap(&self, another: &Section) -> bool {
+        another.end >= self.start && another.start <= self.end
+    }
+
+    fn overlap(&self, another: &Section) -> bool {
+        // left overlap
+        // ...456...  4-6
+        // .234.....  2-4
+        self.left_overlap(another) ||
+        //right overlap
+        // .234.....  2-4
+        // ...456...  4-6
+         another.left_overlap(self)
+    }
+}
+
+#[derive(Debug)]
+struct CleaningAssignment {
+    left: Section,
+    right: Section,
+}
+
+impl CleaningAssignment {
+    fn from_input(l: &String) -> Result<CleaningAssignment, Box<dyn Error>> {
+        let parts: Vec<&str> = l.split(",").collect();
+        if parts.len() != 2 {
+            Err(format!(
+                "Invalid input, expected 2 part assigment separated by ',', got: {}",
+                l
+            )
+            .into())
+        } else {
+            let l = Section::from_input(parts[0])?;
+            let r = Section::from_input(parts[1])?;
+            Ok(CleaningAssignment { left: l, right: r })
+        }
+    }
+
+    fn pair_fully_contains(&self) -> bool {
+        self.left.contains(&self.right) || self.right.contains(&self.left)
+    }
+
+    fn pair_overlap(&self) -> bool {
+        self.left.overlap(&self.right)
+    }
+}
+
+fn day4_result(lines: Vec<String>) -> Result<(), Box<dyn Error>> {
+    let overlapping: Result<Vec<CleaningAssignment>, Box<dyn Error>> =
+        lines.iter().map(CleaningAssignment::from_input).collect();
+    let overlapping_count = overlapping?
+        .iter()
+        .filter(|a| a.pair_overlap())
+        .map(|i| {
+            //  println!("overlap: {:?}", i);
+            i
+        })
+        .count();
+    println!("Result is: {}", overlapping_count);
+
+    Ok(())
+}
+
+// DAY 4 END
+
 fn read_lines(input_path: &str) -> Result<Vec<String>, std::io::Error> {
     let input_file = fs::File::open(input_path)?;
     let lines = BufReader::new(input_file).lines();
 
     lines.collect()
 }
-
-
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<String> = env::args().collect();
@@ -322,6 +427,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         "day1" => day1_result(lines),
         "day2" => day2_result(lines),
         "day3" => day3_result(lines),
+        "day4" => day4_result(lines),
         _d => {
             eprintln!("Not implemented Advent Of Code Day selected: {}, currently only [day1,day2] are supported ", aoc_day);
             process::exit(1)
