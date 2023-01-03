@@ -1,0 +1,62 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "run adv-of-code-2022",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=adv-of-code-2022",
+                    "--package=adv-of-code-2022",
+                    "--manifest-path=${workspaceFolder}/Cargo.toml" //because of reasons https://github.com/vadimcn/vscode-lldb/issues/491#issuecomment-886121267
+                ]
+            },
+            "args": ["day6", "inputs/day6/test_input.txt"],
+            "cwd": "${workspaceFolder}"
+        },
+
+        // {
+        //     "type": "lldb",
+        //     "request": "launch",
+        //     "name": "run adv-of-code-2022",
+        //     "cargo": {
+        //         "args": [
+        //             "build",
+        //             "--bin=adv-of-code-2022",
+        //             "--package=adv-of-code-2022",
+
+        //         ],
+        //         "filter": {
+        //             "name": "adv-of-code-2022",
+        //             "kind": "bin"
+        //         }
+        //     },
+        //     "args": ["day4", "inputs/day4/test_input.txt"],
+        //     "cwd": "${workspaceFolder}"
+        // },
+        // {
+        //     "type": "lldb",
+        //     "request": "launch",
+        //     "name": "Debug unit tests in executable 'adv-of-code-2022'",
+        //     "cargo": {
+        //         "args": [
+        //             "test",
+        //             "--no-run",
+        //             "--bin=adv-of-code-2022",
+        //             "--package=adv-of-code-2022"
+        //         ],
+        //         "filter": {
+        //             "name": "adv-of-code-2022",
+        //             "kind": "bin"
+        //         }
+        //     },
+        //     "args": ["test_input.txt"],
+        //     "cwd": "${workspaceFolder}"
+        // }
+    ]
+}
