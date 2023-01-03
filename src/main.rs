@@ -1,7 +1,7 @@
 use core::fmt;
 use std::{
     arch::x86_64::_mm256_and_pd,
-    collections::{HashMap, HashSet},
+    collections::{HashMap, HashSet, VecDeque},
     env,
     error::Error,
     fs::{self},
@@ -570,10 +570,10 @@ impl SupplyStacks {
     }
 }
 
-fn day5_result(ls: Vec<String>) -> Result<(), Box<dyn Error>> {
+fn day5_result(lines: Vec<String>) -> Result<(), Box<dyn Error>> {
 
-    let stacks_inputs:Vec<&String> = ls.iter().take_while(|&l| l != "").collect();
-    let cmd_inputs:Vec<&String>  = ls.iter().skip_while(|&l| l != "").skip(1).collect();
+    let stacks_inputs:Vec<&String> = lines.iter().take_while(|&l| l != "").collect();
+    let cmd_inputs:Vec<&String>  = lines.iter().skip_while(|&l| l != "").skip(1).collect();
     let mut stacks = SupplyStacks::from_input(stacks_inputs)?;
     println!("SupplyStacks:\n{}", stacks);
     let cmds:Result<Vec<MoveCmd>, Box<dyn Error>> = cmd_inputs.iter().map(|&l| MoveCmd::from_input(l)).collect();
@@ -592,6 +592,45 @@ fn day5_result(ls: Vec<String>) -> Result<(), Box<dyn Error>> {
 
 }
 // DAY 5 END
+
+//DAY 6
+struct MarkerDetector {
+    ring_buffer: VecDeque<char>,
+    chars_processed: usize,
+    marker_length: usize,
+}
+
+impl MarkerDetector {
+    fn new(l: usize) -> MarkerDetector {
+        return MarkerDetector {
+                marker_length: l,
+                ring_buffer: VecDeque::with_capacity(l), 
+                chars_processed: 0
+             }
+    }
+
+    fn process(&mut self, c: char) -> bool {
+        if self.ring_buffer.len() >= self.marker_length {
+            self.ring_buffer.pop_front();
+        }
+        self.ring_buffer.push_back(c);
+
+        self.chars_processed += 1;
+        HashSet::<_>::from_iter(self.ring_buffer.iter()).len() == self.marker_length
+    }
+}
+
+fn day6_result(lines: Vec<String>) -> Result<(), Box<dyn Error>> {
+    let marker_len = 14;
+    for l in    lines {
+        let mut sop = MarkerDetector::new(marker_len);
+        l.chars().take_while(|&c| !sop.process(c)).count();
+        println!("Result: {}", sop.chars_processed);
+    }
+    Ok(())
+}
+
+// DAY 6 END
 
 fn read_lines(input_path: &str) -> Result<Vec<String>, std::io::Error> {
     let input_file = fs::File::open(input_path)?;
@@ -619,6 +658,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         "day3" => day3_result(lines),
         "day4" => day4_result(lines),
         "day5" => day5_result(lines),
+        "day6" => day6_result(lines),
         _d => {
             eprintln!("Not implemented Advent Of Code Day selected: {}, currently only [day1,day2] are supported ", aoc_day);
             process::exit(1)
