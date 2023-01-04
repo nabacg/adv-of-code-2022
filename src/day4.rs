@@ -84,10 +84,7 @@ pub fn result(lines: Vec<String>) -> Result<(), Box<dyn Error>> {
     let overlapping_count = overlapping?
         .iter()
         .filter(|a| a.pair_overlap())
-        .map(|i| {
-            //  println!("overlap: {:?}", i);
-            i
-        })
+        .map(|i| i)
         .count();
     println!("Result is: {}", overlapping_count);
 

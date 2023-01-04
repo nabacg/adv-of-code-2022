@@ -126,11 +126,9 @@ pub fn result(lines: Vec<String>) -> Result<(), Box<dyn Error>> {
         Ok(games) => {
             let scores: i32 = games.iter().map(|g| g.player_2_score()).sum();
             println!("result is: {}", scores);
+            Ok(())
         }
-        Err(e) => {
-            eprintln!("error processing input: {}", e);
-        }
+        Err(e) => Err(format!("error processing input: {}", e).into())
     }
-    Ok(())
 }
 // DAY 2

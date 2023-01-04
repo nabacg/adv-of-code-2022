@@ -1,5 +1,5 @@
 use core::fmt;
-use std::{error::Error, num::ParseIntError, collections::HashMap, process};
+use std::{error::Error, num::ParseIntError, collections::HashMap};
 
 
 // DAY 5 
@@ -176,17 +176,13 @@ pub fn result(lines: Vec<String>) -> Result<(), Box<dyn Error>> {
     println!("SupplyStacks:\n{}", stacks);
     let cmds:Result<Vec<MoveCmd>, Box<dyn Error>> = cmd_inputs.iter().map(|&l| MoveCmd::from_input(l)).collect();
     let cmds = cmds?;
-    // println!("cmds: {:?}", cmds);
-    cmds.iter().for_each(|cmd| {
-        let r = stacks.apply(cmd);
-        println!("\n{}\n{}", cmd, stacks);
-        if r.is_none() {
-            eprintln!("Failed to apply cmd:\n{}\n, stacks:\n{}", cmd, stacks);
-            process::exit(1)
-        }
-    });
-    println!("Result: {}", stacks.top_of_stacks());
-    Ok(())
+    let r: Result<(), String> = cmds.iter().map(|cmd| 
+        stacks.apply(cmd).ok_or(format!("Failed to apply cmd:\n{}\n, stacks:\n{}", cmd, stacks))
+    ).collect();
 
+    if r.is_ok() {
+        println!("Result: {}", stacks.top_of_stacks());
+    }
+    r.or_else(|e| Err(e.into()))
 }
 // DAY 5 END
