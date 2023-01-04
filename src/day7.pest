@@ -1,0 +1,14 @@
+WHITESPACE = _{ " " }
+dirPrefix = _ { "dir" }
+dirOutput = { dirPrefix ~ ASCII_ALPHA+ }
+fileSize = { ASCII_DIGIT+ }
+fileName = { (ASCII_ALPHA|".")+ }
+fileOutput = ${ fileSize  ~ WHITESPACE  ~ fileName}
+lsOutputLine = _{ dirOutput | fileOutput }
+lsOutputLines = _{ lsOutputLine ~ ( NEWLINE ~ lsOutputLine)* }
+lsCmd = { "$" ~ "ls" ~ NEWLINE  ~ lsOutputLines? }
+cdRoot = { "/" } 
+cdPath = { ASCII_ALPHA+ } 
+cdParent = { ".." }
+cdCmd =  { "$" ~ "cd" ~ (cdParent | cdRoot | cdPath ) }
+fsCmd = _{ ( lsCmd | cdCmd ) ~ ( NEWLINE ~ ( lsCmd | cdCmd ))* }
