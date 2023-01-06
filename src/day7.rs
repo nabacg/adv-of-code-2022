@@ -131,9 +131,8 @@ impl ElfFs {
     }
 }
 
-pub fn result(lines: Vec<String>) -> Result<(), Box<dyn Error>> {
-    let inputs =     lines.join("\n");
-    let parsed = FsCmdParser::parse(Rule::fsCmd, &inputs[..])?;
+pub fn result(inputs: String) -> Result<(), Box<dyn Error>> {
+    let parsed = FsCmdParser::parse(Rule::fsCmd, &inputs)?;
 
     let cmds: Result<Vec<FsCmd>, &str> = parsed.map(parse_cmds).collect();
     let cmds = cmds?;
@@ -146,7 +145,7 @@ pub fn result(lines: Vec<String>) -> Result<(), Box<dyn Error>> {
         .map(|(_, &size)| size)
         .sum();
     
-        println!("Result: {}", result);
+    println!("Result: {}", result);
     let total_fs_size: usize = 70000000;
     let required_free_space: usize = 30000000;
     let root_dir_size = dir_sizes.get("/").ok_or("Cannot find / (root) in dir_sizes")?;
@@ -161,8 +160,5 @@ pub fn result(lines: Vec<String>) -> Result<(), Box<dyn Error>> {
     let res_s = big_enough_dirs.first().ok_or("empty big_enough_dirs vec, no dirs are big enough!")?;
     println!("Part2 result:  {}", res_s);
         
-
-
-
     Ok(())
 }
