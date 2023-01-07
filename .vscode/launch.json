@@ -16,7 +16,7 @@
                     "--manifest-path=${workspaceFolder}/Cargo.toml" //because of reasons https://github.com/vadimcn/vscode-lldb/issues/491#issuecomment-886121267
                 ]
             },
-            "args": ["day8", "inputs/day8/test_input.txt"],
+            "args": ["day9", "inputs/day9/test_input.txt"],
             "cwd": "${workspaceFolder}"
         },
 
