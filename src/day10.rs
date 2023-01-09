@@ -71,8 +71,6 @@ impl CPU {
         }
     }
 
-    //##..##..##..##..##..##..##..##..##..##..
-    //##..##..##..##..##..##..##..##..##..##..
     fn signal_strengths(&self) -> Vec<i32> {
         self.SignalRecording.iter().map(|(cc, x)| (*cc as i32) * x).collect()
     }

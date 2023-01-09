@@ -1,0 +1,25 @@
+// WHITESPACE = _{ " " }
+
+truthyMonkeyId  = { ASCII_DIGIT+ }
+falsyMonkeyId   = { ASCII_DIGIT+ }
+testCoef        = { ASCII_DIGIT+ }
+testSpec = { "Test: divisible by "   ~ testCoef ~ NEWLINE ~
+             " "+ ~  "If true: throw to monkey "  ~ truthyMonkeyId ~ NEWLINE ~
+             " "+ ~  "If false: throw to monkey " ~ falsyMonkeyId 
+          }
+
+operationIntArg = { ASCII_DIGIT+ }
+operationOldSelfArg = { "old" }
+operationArg = _{operationIntArg | operationOldSelfArg }
+operationOp =   { "+" | "*" }
+operationSpec = { "Operation: new = old " ~ operationOp ~ " " ~ operationArg }
+
+item = { ASCII_DIGIT+ }
+startingItemsSpec = { "Starting items: " ~ item ~ (", " ~ item)* }
+monkeyId = { ASCII_DIGIT+ }
+monkeySpec  = { " "* ~ "Monkey" ~ " " ~ monkeyId ~ ":" ~ NEWLINE ~ 
+                  " "+ ~  startingItemsSpec ~ NEWLINE ~
+                  " "+ ~  operationSpec     ~ NEWLINE ~
+                  " "+ ~  testSpec          }
+
+monkeySpecs = _ { monkeySpec ~ ( NEWLINE ~ NEWLINE  ~ monkeySpec )* }
