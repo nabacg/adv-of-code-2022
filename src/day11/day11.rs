@@ -138,7 +138,7 @@ impl MonkeyGame {
 }
 
 #[derive(Parser)]
-#[grammar = "day11.pest"]
+#[grammar = "day11/day11.pest"]
 struct MonkeySpecParser;
 
 pub(crate) fn result(input: String) -> Result<(), Box<dyn Error>> {

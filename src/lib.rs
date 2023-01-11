@@ -12,7 +12,6 @@ mod day9;
 mod day10;
 mod day11;
 
-extern crate pest;
 #[macro_use]
 extern crate pest_derive;
 
@@ -36,7 +35,7 @@ pub fn print_result(aoc_day: &String, input_path: &String) -> Result<(), Box<dyn
         "day8" => day8::result(fs::read_to_string(input_path)?),
         "day9" => day9::result(read_lines(input_path)?),
         "day10" => day10::result(read_lines(input_path)?),
-        "day11" => day11::result(fs::read_to_string(input_path)?),        
+        "day11" => day11::day11::result(fs::read_to_string(input_path)?),        
         _d => 
             Err(format!("Not implemented Advent Of Code Day selected: {}, currently only [day1,day2] are supported ", aoc_day).into())
             
