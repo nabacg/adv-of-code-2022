@@ -1,9 +1,11 @@
 use std::error::Error;
-use day11::result;
+use monkeygame::result;
 
 
 extern crate pest;
 
-pub mod day11;
+mod parser;
+pub mod monkeygame;
+
 
 
