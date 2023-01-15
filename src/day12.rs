@@ -22,7 +22,14 @@ impl Vertex {
     }
 
     fn height(&self) -> usize {
-        return self.letter as usize
+        match self.letter {
+            'S' => 'a' as usize,
+            'E' => 'z' as usize, 
+            _ => self.letter as usize
+        }
+    }
+    fn distance(&self, other: &Vertex) -> usize {
+        self.height().abs_diff(other.height())
     }
 
     fn is_neighbour(&self, other: &Vertex) -> bool {
@@ -73,6 +80,46 @@ impl Graph {
             1
         }
     }
+
+    fn adjacent_nodes(vs:&Vec<Vertex>, v: &Vertex, v_idx: usize, vs_length: usize, cols: usize) -> Vec<(Vertex, usize)> {
+        let vx = v_idx % cols;
+        let vy = v_idx / cols;
+        let max_rows = vs_length / cols;
+
+        let ns =
+        vec![(vx as i32) -1, vx as i32, (vx as i32) +1]
+        .into_iter()
+        .filter(|&x| x >= 0)
+        .map(|x| x as usize)
+            .filter(|&x|  x < cols )
+            .flat_map(|x| {
+                // println!("x:{}", x);
+                vec![(vy as i32)-1, vy as i32, (vy as i32)+1]                    
+                    .into_iter()
+                    .filter(|&y| y >= 0)
+                    .map(|y| y as usize)
+                    .filter(|&y|  y < max_rows)                    
+                    .map(move |y| (x,y))
+                    .filter(|(x, y)| !(x == &vx && y == &vy))
+                    .filter(|(x,y)| x.abs_diff(vx)+y.abs_diff(vy) == 1)                
+                    .map(|(x,y)| {
+                        // println!("({}, {}) -> {}", x, y,  x + y*self.cols);
+                        let n_v = &vs[x + y*cols];
+                        let new_v = Vertex {
+                            letter: n_v.letter,
+                            i: x + y*cols,
+                            x,
+                            y,
+                            cols,
+                        };
+                        let dist  = v.height().abs_diff(new_v.height()); //Graph::distance(v, &new_v);
+                        (new_v, dist)
+                    })                    
+                    .filter(|(_, dist)| *dist < 2)
+            }).collect_vec();
+
+         ns   
+    }
 }
 
 fn new(ls: String) -> Result<Graph, String> {
@@ -84,6 +131,16 @@ fn new(ls: String) -> Result<Graph, String> {
         .map(|(i, c)| Vertex::new(i, c, cols) )
         .collect::<Vec<Vertex>>();
 
+    let vs_len = vertices.len();
+
+    let adjacency_list:Vec<(&Vertex, Vec<(Vertex, usize)>)> = vertices
+        .iter()
+        .enumerate()
+        .map(|(i, v) | {
+        let ns = Graph::adjacent_nodes(&vertices, v,i, vs_len, cols);
+        (v, ns)
+    }).collect();
+
     let (target_index, target) = vertices.iter()
                 .enumerate()
                 .filter(|(i, v)| v.letter == 'E')
@@ -93,7 +150,7 @@ fn new(ls: String) -> Result<Graph, String> {
 
     let (start_index, start) = vertices.iter()
                 .enumerate()
-                .filter(|(i, v)| v.letter == 'E')
+                .filter(|(i, v)| v.letter == 'S')
                 .take(1)
                 .next()
                 .ok_or("Cannot find target node index, i.e. grid field - 'E'")?;
@@ -177,11 +234,17 @@ fn dijkstra(g: &Graph) -> Vec<usize> {
 //https://codereview.stackexchange.com/a/202879
 
 pub(crate) fn result(input: String) -> Result<(), Box<dyn Error>> {
-    let v = Vertex::new(39, 'S', 8);
-    let v = Vertex{
-        i: 4, x: 0, y: 4, letter: 'a', cols: 8,
-    };
-    let ns = v.neighbours(40);
+
+
+    // let v = Vertex::new(39, 'l', 8);
+    // let v2=  Vertex {
+    //     i: 4, x: 0, y: 4, letter: 'm', cols: 8,
+    // };
+    // let h = v.height();
+    // let h2 = v2.height();
+
+    // let dist = v.distance(&v2);
+    // let ns = v.neighbours(40);
 
     let g = new(input)?;
     let path = dijkstra(&g);
