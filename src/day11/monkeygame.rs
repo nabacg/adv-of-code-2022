@@ -144,7 +144,7 @@ impl MonkeyGame {
 }
 
 
-pub(crate) fn result(input: String) -> Result<(), Box<dyn Error>> {
+pub fn result(input: String) -> Result<(), Box<dyn Error>> {
     let monkeys = parser::parse_input(&input)?;
     let mut mg = MonkeyGame::new(monkeys);
     for i in 0..10000 {

@@ -1,11 +1,7 @@
-use std::error::Error;
-use monkeygame::result;
-
-
-extern crate pest;
+pub use monkeygame::result as result;
 
 mod parser;
-pub mod monkeygame;
+mod monkeygame;
 
 
 
