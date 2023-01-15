@@ -41,7 +41,12 @@ struct Graph {
 }
 
 impl Graph {
-    fn adjacent_nodes(vs: &Vec<Vertex>, v_idx: usize, cols: usize) -> Vec<(Vertex, usize)> {
+    fn adjacent_nodes(
+        vs: &Vec<Vertex>,
+        v_idx: usize,
+        cols: usize,
+        climbing_down: bool,
+    ) -> Vec<(Vertex, usize)> {
         let v = &vs[v_idx];
         let vs_length = vs.len();
         let vx = v_idx % cols;
@@ -69,56 +74,68 @@ impl Graph {
                         let height_diff = v.height_diff(&new_v);
                         (new_v, height_diff)
                     })
-                    .filter(|(_, hdiff)| *hdiff < 2)
+                    // .filter(|(_, hdiff)| )
+                    .filter(|(_, hdiff)| {
+                        if climbing_down {
+                            *hdiff > -2
+                        } else {
+                            *hdiff < 2
+                        }
+                    })
                     .map(|(v, _)| (v, 1)) // distance is always 1, if height differnce is at most 1 higher
             })
             .collect_vec();
 
         ns
     }
-}
 
-fn new(ls: String) -> Result<Graph, String> {
-    let cols = ls
-        .find('\n')
-        .ok_or("Invalid input - single line tree grid is not a grid")?;
-    let vertices = ls
-        .chars()
-        .filter(|&c| c != '\n')
-        .enumerate()
-        .map(|(i, c)| Vertex::new(i, c))
-        .collect::<Vec<Vertex>>();
+    fn new(ls: &str, start_letter: char, target_letter: char) -> Result<Graph, String> {
+        let cols = ls
+            .find('\n')
+            .ok_or("Invalid input - single line tree grid is not a grid")?;
+        let vertices = ls
+            .chars()
+            .filter(|&c| c != '\n')
+            .enumerate()
+            .map(|(i, c)| Vertex::new(i, c))
+            .collect::<Vec<Vertex>>();
+        let climbing_down = match (start_letter, target_letter) {
+            ('S', 'E') => false,
+            ('E', 'S') => true,
+            _ => return Err(format!("Invalid start_letter or target_letter (or both), allowed values: ['S' | 'E'], got: start_letter:{}, target_letter:{}", 
+            start_letter, target_letter)),
+        };
 
-    let adjacency_list: HashMap<Vertex, Vec<(Vertex, usize)>> = vertices
-        .iter()
-        .enumerate()
-        .map(|(i, &v)| {
-            let ns = Graph::adjacent_nodes(&vertices, i, cols);
-            (v, ns)
+        let adjacency_list: HashMap<Vertex, Vec<(Vertex, usize)>> = vertices
+            .iter()
+            .enumerate()
+            .map(|(i, &v)| {
+                let ns = Graph::adjacent_nodes(&vertices, i, cols, climbing_down);
+                (v, ns)
+            })
+            .collect();
+
+        let &target = vertices
+            .iter()
+            .filter(|&v| v.letter == target_letter)
+            .take(1)
+            .next()
+            .ok_or("Cannot find target node index, i.e. grid field - 'E'")?;
+
+        let &start = vertices
+            .iter()
+            .filter(|v| v.letter == start_letter)
+            .take(1)
+            .next()
+            .ok_or("Cannot find target node index, i.e. grid field - 'E'")?;
+
+        Ok(Graph {
+            adjacency_list,
+            start,
+            target,
         })
-        .collect();
-
-    let &target = vertices
-        .iter()
-        .filter(|&v| v.letter == 'E')
-        .take(1)
-        .next()
-        .ok_or("Cannot find target node index, i.e. grid field - 'E'")?;
-
-    let &start = vertices
-        .iter()
-        .filter(|v| v.letter == 'S')
-        .take(1)
-        .next()
-        .ok_or("Cannot find target node index, i.e. grid field - 'E'")?;
-
-    Ok(Graph {
-        adjacency_list,
-        start,
-        target,
-    })
+    }
 }
-
 struct PathDistance {
     target: Vertex,
     distance: usize,
@@ -202,13 +219,22 @@ pub(crate) fn result(input: String) -> Result<(), Box<dyn Error>> {
     // let dist = v.distance(&v2);
     // let ns = v.neighbours(40);
 
-    let g = new(input)?;
-    let ns = g.adjacency_list.get(&g.target);
+    let g1 = Graph::new(&input, 'S', 'E')?;
+    let ns = g1.adjacency_list.get(&g1.target);
     // let to_target2 = g.adjacency_list.get(&Vertex::new(3475, 'y'));
-    let distances = dijkstra(&g);
+    let distances = dijkstra(&g1);
 
-    let target_distance = distances.get(&g.target);
-    println!("distance:{:?}", target_distance);
+    let target_distance = distances.get(&g1.target);
+    println!("Part 1 - distance:{:?}", target_distance);
 
+    let g2 = Graph::new(&input, 'E', 'S')?;
+    let reverse_distances = dijkstra(&g2);
+
+    let start_points = reverse_distances
+        .iter()
+        .filter(|(&k, &v)| k.letter == 'a')
+        .sorted_by(|a, b| a.1.cmp(b.1))
+        .collect_vec();
+    println!("Part 2 - distance: {}", start_points[0].1);
     Ok(())
 }
