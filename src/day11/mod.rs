@@ -1,7 +1,4 @@
-pub use monkeygame::result as result;
+pub use monkeygame::result;
 
-mod parser;
 mod monkeygame;
-
-
-
+mod parser;

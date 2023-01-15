@@ -1,5 +1,4 @@
-use std::{num::ParseIntError, error::Error};
-
+use std::{error::Error, num::ParseIntError};
 
 // DAY 4
 #[derive(Debug)]

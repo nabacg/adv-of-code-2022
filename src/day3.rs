@@ -1,4 +1,4 @@
-use std::{process, collections::HashSet, error::Error};
+use std::{collections::HashSet, error::Error, process};
 
 // DAY 3
 #[derive(Debug)]

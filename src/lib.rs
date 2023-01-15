@@ -1,6 +1,13 @@
-use std::{fs::{self, File}, io::{BufReader, BufRead}, error::Error};
+use std::{
+    error::Error,
+    fs::{self, File},
+    io::{BufRead, BufReader},
+};
 
 mod day1;
+mod day10;
+mod day11;
+mod day12;
 mod day2;
 mod day3;
 mod day4;
@@ -9,13 +16,9 @@ mod day6;
 mod day7;
 mod day8;
 mod day9;
-mod day10;
-mod day11;
-mod day12;
 
 #[macro_use]
 extern crate pest_derive;
-
 
 fn read_lines(input_path: &str) -> Result<Vec<String>, std::io::Error> {
     let input_file = File::open(input_path)?;
@@ -38,9 +41,6 @@ pub fn print_result(aoc_day: &String, input_path: &String) -> Result<(), Box<dyn
         "day10" => day10::result(read_lines(input_path)?),
         "day11" => day11::result(fs::read_to_string(input_path)?),        
         "day12" => day12::result(fs::read_to_string(input_path)?),
-        _d => 
-            Err(format!("Not implemented Advent Of Code Day selected: {}, currently only [day1,day2] are supported ", aoc_day).into())
-            
-        
+        _d => Err(format!("Not implemented Advent Of Code Day selected: {}, currently only [day1,day2] are supported ", aoc_day).into()),        
     }
 }

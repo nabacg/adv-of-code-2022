@@ -1,7 +1,5 @@
 use std::error::Error;
 
-
-
 // DAY 1
 struct Elf {
     calories: i32,

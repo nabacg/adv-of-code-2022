@@ -128,7 +128,7 @@ pub fn result(lines: Vec<String>) -> Result<(), Box<dyn Error>> {
             println!("result is: {}", scores);
             Ok(())
         }
-        Err(e) => Err(format!("error processing input: {}", e).into())
+        Err(e) => Err(format!("error processing input: {}", e).into()),
     }
 }
 // DAY 2
