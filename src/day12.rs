@@ -1,87 +1,48 @@
 use core::fmt;
 use std::{error::Error, collections::{HashMap, BinaryHeap, HashSet}};
-use std::cmp::Reverse;
 use itertools::Itertools;
 
 
-
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 struct Vertex {
     i: usize,
-    x: usize,
-    y: usize,
     letter: char,
-    cols: usize,
 }
 
+impl fmt::Display for Vertex {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}:{}", self.letter, self.i)
+    }
+}
 
 impl Vertex {
-    fn new(i: usize, letter: char, cols: usize) -> Vertex {
-        let x = i % cols;
-        let y = i / cols;
-        Vertex { i, x, y, letter, cols, }
+    fn new(i: usize, letter: char) -> Vertex {
+        Vertex { i, letter, }
     }
 
-    fn height(&self) -> usize {
+    fn height(&self) -> i32 {
         match self.letter {
-            'S' => 'a' as usize,
-            'E' => 'z' as usize, 
-            _ => self.letter as usize
+            'S' => 'a' as i32,
+            'E' => 'z' as i32, 
+            _ => self.letter as i32
         }
     }
-    fn distance(&self, other: &Vertex) -> usize {
-        self.height().abs_diff(other.height())
-    }
-
-    fn is_neighbour(&self, other: &Vertex) -> bool {
-        self.x.abs_diff(other.x) <= 1 &&
-         self.y.abs_diff(other.y) <= 1
-    }
-
-    fn neighbours(&self, full_length: usize) -> Vec<usize> {
-        let max_rows = full_length / self.cols;
-        vec![(self.x as i32) -1, self.x as i32, (self.x as i32) +1]
-        .into_iter()
-        .filter(|&x| x >= 0)
-        .map(|x| x as usize)
-            .filter(|&x|  x < self.cols )
-            .flat_map(|x| {
-                // println!("x:{}", x);
-                vec![(self.y as i32)-1, self.y as i32, (self.y as i32)+1]                    
-                    .into_iter()
-                    .filter(|&y| y >= 0)
-                    .map(|y| y as usize)
-                    .filter(|&y|  y < max_rows)                    
-                    .map(move |y| (x,y))
-                    .filter(|(x, y)| !(x == &self.x && y == &self.y))
-                    .filter(|(x,y)| x.abs_diff(self.x)+y.abs_diff(self.y) == 1)
-                    .map(|(x,y)| {
-                        // println!("({}, {}) -> {}", x, y,  x + y*self.cols);
-                        x + y*self.cols
-                    })
-            }).collect_vec()
+    fn height_diff(&self, other: &Vertex) -> i32 {
+         other.height() - self.height() 
     }
 }
 
 struct Graph {
-    vertices: Vec<Vertex>,
-    target_index: usize,
-    // target: &'a Vertex,
-    start_index: usize,
-    // start: &'a Vertex,
+    // vertices: Vec<Vertex>,
+    adjacency_list: HashMap<Vertex, Vec<(Vertex, usize)>>,
+    start: Vertex,
+    target: Vertex,
 }
 
 impl Graph {
-    fn distance(a: &Vertex, b: &Vertex) -> usize {
-        if !a.is_neighbour(b) {
-            usize::MAX
-        } else if a.height().abs_diff(b.height()) > 1 {
-            1000
-        } else {
-            1
-        }
-    }
-
-    fn adjacent_nodes(vs:&Vec<Vertex>, v: &Vertex, v_idx: usize, vs_length: usize, cols: usize) -> Vec<(Vertex, usize)> {
+fn adjacent_nodes(vs:&Vec<Vertex>, v_idx: usize, cols: usize) -> Vec<(Vertex, usize)> {
+        let v = &vs[v_idx];
+        let vs_length = vs.len();
         let vx = v_idx % cols;
         let vy = v_idx / cols;
         let max_rows = vs_length / cols;
@@ -104,18 +65,12 @@ impl Graph {
                     .filter(|(x,y)| x.abs_diff(vx)+y.abs_diff(vy) == 1)                
                     .map(|(x,y)| {
                         // println!("({}, {}) -> {}", x, y,  x + y*self.cols);
-                        let n_v = &vs[x + y*cols];
-                        let new_v = Vertex {
-                            letter: n_v.letter,
-                            i: x + y*cols,
-                            x,
-                            y,
-                            cols,
-                        };
-                        let dist  = v.height().abs_diff(new_v.height()); //Graph::distance(v, &new_v);
-                        (new_v, dist)
+                        let new_v = vs[x + y*cols];
+                        let height_diff  = v.height_diff(&new_v);
+                        (new_v, height_diff)
                     })                    
-                    .filter(|(_, dist)| *dist < 2)
+                    .filter(|(_, hdiff)| *hdiff < 2)
+                    .map(|(v, _)| (v, 1)) // distance is always 1, if height differnce is at most 1 higher
             }).collect_vec();
 
          ns   
@@ -128,108 +83,107 @@ fn new(ls: String) -> Result<Graph, String> {
     ls.chars()
         .filter(|&c| c != '\n')
         .enumerate()
-        .map(|(i, c)| Vertex::new(i, c, cols) )
+        .map(|(i, c)| Vertex::new(i, c) )
         .collect::<Vec<Vertex>>();
 
-    let vs_len = vertices.len();
 
-    let adjacency_list:Vec<(&Vertex, Vec<(Vertex, usize)>)> = vertices
+    let adjacency_list:HashMap<Vertex, Vec<(Vertex, usize)>> = vertices
         .iter()
         .enumerate()
-        .map(|(i, v) | {
-        let ns = Graph::adjacent_nodes(&vertices, v,i, vs_len, cols);
+        .map(|(i, &v) | {
+        let ns = Graph::adjacent_nodes(&vertices, i, cols);
         (v, ns)
     }).collect();
 
-    let (target_index, target) = vertices.iter()
-                .enumerate()
-                .filter(|(i, v)| v.letter == 'E')
+    let &target = vertices.iter()
+                .filter(| &v| v.letter == 'E')
                 .take(1)
                 .next()
                 .ok_or("Cannot find target node index, i.e. grid field - 'E'")?;
 
-    let (start_index, start) = vertices.iter()
-                .enumerate()
-                .filter(|(i, v)| v.letter == 'S')
+    let &start = vertices.iter()
+                .filter(| v| v.letter == 'S')
                 .take(1)
                 .next()
                 .ok_or("Cannot find target node index, i.e. grid field - 'E'")?;
 
     Ok(Graph{ 
-        vertices,
-        start_index,
-        // start,
-        target_index,
-        // target,
+        // vertices,
+        adjacency_list,
+        start,
+        target,
     })
 }
 
-#[derive(Eq)]
-struct Distance {
-    i: usize,
+struct PathDistance {
+    target: Vertex, 
     distance: usize,
 }
+impl PathDistance {
+    fn new(v: Vertex, d: usize) -> PathDistance {
+        PathDistance {
+            target: v,
+            distance: d,
+        }
+    }
+}
 
-impl Ord for Distance {
+impl Ord for PathDistance {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        // since we'll be looking for MIN distance, need to swap around self and other
         other.distance.cmp(&self.distance)
     }
 }
 
-impl PartialOrd for Distance {
+impl PartialOrd for PathDistance {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-
-        Some(other.distance.cmp(&self.distance))
+       other.distance.partial_cmp(&self.distance) 
     }
 }
 
-impl PartialEq for Distance {
+impl PartialEq for PathDistance {
     fn eq(&self, other: &Self) -> bool {
-        self.distance == other.distance
+         self.target == other.target &&  self.distance == other.distance
     }
 }
-fn dijkstra(g: &Graph) -> Vec<usize> {
-    let mut result_path = HashMap::new();
+
+impl Eq for PathDistance {}
+
+fn dijkstra(g: &Graph) -> HashMap<Vertex, usize> {
+    let mut distances = HashMap::new();
     let mut visited = HashSet::new();
     let mut to_visit = BinaryHeap::new();
     
-    result_path.insert(g.start_index, 0);
-    to_visit.push((g.start_index, 0));
+    distances.insert(g.start, 0);
+    to_visit.push(PathDistance::new(g.start, 0));
 
-    let vertices_len = g.vertices.len();
+    while let Some(PathDistance { target, distance }) = to_visit.pop() {
+            if target == g.target {
+                return distances;
+            }
 
-    while let Some((v_index, v_distance)) = to_visit.pop() {
-            if !visited.insert(v_index) {
+            if !visited.insert(target) {
                 // if insert failed, we already visited this node
                 continue;
             }
-
-            // TODO this is akward to deal with, move away from dealing with indices, to dealing with Vertex (would mean implementing Copy on it)
-            let v = g.vertices.get(v_index).expect("can't get current v_index!");
-            
-
-            let neighbourhood_distances: Vec<(&Vertex, usize)> = v.neighbours(vertices_len).iter().flat_map(|&n| 
-                if let Some(n) = g.vertices.get(n) {
-                    vec![(n, Graph::distance(v, n))]
-                } else {
-                    vec![]
-                }).collect();
                 
-            for (neighbour, distance) in neighbourhood_distances {
-                let new_distance = v_distance + distance;
-
-                let is_shorter = result_path.get(&neighbour.i)
-                .map_or(true, |&current_dist| new_distance < current_dist);
-            
-                if is_shorter {
-                    result_path.insert(neighbour.i, new_distance);
-                    to_visit.push((neighbour.i, new_distance));
+            if let Some(neighbours) = g.adjacency_list.get(&target) {
+                for (neighbour, n_distance) in neighbours {
+                    let new_distance = distance + n_distance;
+    
+                    let is_shorter = distances
+                                    .get(&neighbour)
+                                    .map_or(true, |&current_dist| new_distance < current_dist);
+                
+                    if is_shorter {
+                        distances.insert(*neighbour, new_distance);
+                        to_visit.push(PathDistance::new(*neighbour, new_distance));
+                    }
+                }
             }
-
-
         };
-    }
-    result_path.keys().map(|&i| i).collect_vec()
+    
+    distances
 }
 //https://codereview.stackexchange.com/a/202879
 
@@ -247,11 +201,15 @@ pub(crate) fn result(input: String) -> Result<(), Box<dyn Error>> {
     // let ns = v.neighbours(40);
 
     let g = new(input)?;
-    let path = dijkstra(&g);
+    let ns = g.adjacency_list.get(&g.target);
+    // let to_target2 = g.adjacency_list.get(&Vertex::new(3475, 'y'));
+    let distances = dijkstra(&g);
 
 
+    let target_distance = distances.get(&g.target);
+    println!("distance:{:?}", target_distance);
 
-    println!("path:{:?}", path.iter().rev());
+
 
     Ok(())
 }
