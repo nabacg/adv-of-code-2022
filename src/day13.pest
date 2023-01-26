@@ -1,0 +1,4 @@
+WHITESPACE = _{ " " }
+integer =  { ASCII_DIGIT+ }
+list = { "[" ~ ( list | integer )? ~ ("," ~ (list | integer))*  ~ "]" }
+packet = { list }
