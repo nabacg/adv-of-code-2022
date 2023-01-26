@@ -1,3 +1,5 @@
+use core::fmt;
+use std::collections::HashSet;
 use std::error::Error;
 use itertools::Itertools;
 use pest::iterators::Pair;
@@ -7,6 +9,15 @@ use pest::Parser;
 enum DataGram {
     Int(u32),
     List(Vec<DataGram>),
+}
+
+impl fmt::Display for DataGram {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            DataGram::Int(i) => write!(f, "{}", i),
+            DataGram::List(ds) => write!(f, "[{}]",  ds.iter().map(|d| format!("{}", d)).join(",")),
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -99,13 +110,49 @@ pub(crate) fn result(ls: Vec<String>) -> Result<(), Box<dyn Error>> {
             }).collect();
 
     let pairs = lines?;
-    println!("inputs: {:?}", pairs);
+    // println!("inputs: {:?}", pairs);
     
-    let right_ordered = pairs.into_iter().filter(|p| p.is_right_order());
-    println!("right_ordered: {:?}", right_ordered);
+    let right_ordered = pairs.iter().filter(|&p| p.is_right_order());
+    // println!("right_ordered: {:?}", right_ordered);
     let res: usize = right_ordered.map(|p| p.index).sum();
     
-    println!("result: {}", res);
+    println!("Part1 - result: {}", res);
 
+
+    // for part 2, sort pairs with is_right_order turned into comparator
+    // but first add 2 more items divider_packets
+    // [[2]]
+    // [[6]]
+    let divider_packets = vec![
+        DataGram::List(vec![DataGram::List(vec![DataGram::Int(2)])]),
+        DataGram::List(vec![DataGram::List(vec![DataGram::Int(6)])]),
+        ];
+    //  first would need to flatten list of PacketPairs into list of DataGrams?
+    let flattened_packets = pairs
+        .into_iter()
+        .flat_map(|p| vec![p.left, p.right])
+        .chain(divider_packets)
+        .sorted_by(|a,b| {
+            match PacketPair::are_ordered(a, b) {
+                Some(true) => std::cmp::Ordering::Less,
+                Some(false) => std::cmp::Ordering::Greater,
+                None => std::cmp::Ordering::Equal,
+            }
+        });
+    // flattened_packets.for_each(|p| { 
+    //     println!("{}", p);
+    // });    
+    let divider_packets = vec![
+        DataGram::List(vec![DataGram::List(vec![DataGram::Int(2)])]),
+        DataGram::List(vec![DataGram::List(vec![DataGram::Int(6)])]),
+        ];
+    let divider_set = HashSet::<_>::from_iter(divider_packets.iter().map(|p|  format!("{}", p)));
+    let divider_indices:usize =    flattened_packets
+        .enumerate()
+        .filter(|(_, p)| divider_set.contains(&format!("{}", p)))
+        .map(|(i, p)| i+1)
+        .product();
+
+    println!("Part2 - {}", divider_indices);
     Ok(())
 }
