@@ -84,12 +84,6 @@ impl Knot {
         }
     }
 
-    fn distance(&self, r: &Knot) -> f64 {
-        let x_delta = (r.x - self.x) as f64;
-        let y_delta = (r.y - self.y) as f64;
-        (x_delta.powi(2) + y_delta.powi(2)).sqrt()
-    }
-
     fn is_adjacent(&self, other: &Knot) -> bool {
         self.x.abs_diff(other.x) <= 1 && self.y.abs_diff(other.y) <= 1
     }
@@ -161,7 +155,7 @@ impl Rope {
     }
 
     fn apply_move(&mut self, m: &Move) {
-        for i in 0..m.steps {
+        for _ in 0..m.steps {
             self.apply_dir(&m.dir);
         }
     }
@@ -171,7 +165,7 @@ impl Rope {
         let new_head = self.knots[0].move_to(dir);
 
         let mut knots = vec![new_head];
-        let new_knots = self.knots[1..].iter().fold(&mut knots, |acc, k| {
+        let _new_knots = self.knots[1..].iter().fold(&mut knots, |acc, k| {
             let head = acc
                 .last()
                 .expect("Should never be empty, we start from [1..]");
@@ -192,17 +186,6 @@ impl Rope {
         self.knots = knots;
     }
 
-    fn move_knot(head: &Knot, tail: &Knot, dir: &Dir) -> (Knot, Knot) {
-        let new_head = head.move_to(dir);
-        if !new_head.is_adjacent(tail) {
-            let tail_move = tail.dir_towards(&new_head);
-            println!("Tail Move: {:?}", tail_move);
-            let new_tail = tail.move_to(&tail_move);
-            (new_head, new_tail)
-        } else {
-            (new_head, tail.clone())
-        }
-    }
 
     fn print_tail_history(&self) {
         let head = self.head();
@@ -231,7 +214,7 @@ impl fmt::Display for Rope {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let head = self.head();
         let tail = self.tail();
-        writeln!(f, "Head: {}, Tail: {}", head, tail);
+        writeln!(f, "Head: {}, Tail: {}", head, tail)?;
         let max_cols = self.knots.iter().map(|k| k.x).max().unwrap();
         let max_rows = self.knots.iter().map(|k| k.y).max().unwrap();
 
@@ -257,7 +240,7 @@ impl fmt::Display for Rope {
                     }
                 })
                 .collect();
-            writeln!(f, "{}", row_str.join(""));
+            writeln!(f, "{}", row_str.join("")).expect("Failed to writeln! row_str");
         });
         writeln!(f, "")
     }

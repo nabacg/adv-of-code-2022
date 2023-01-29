@@ -19,26 +19,6 @@ impl Rucksack {
         })
     }
 
-    pub fn compartment_overlaps(&self) -> Vec<&char> {
-        // let mut item_count: HashMap<&char, i32> = HashMap::new();
-        // self.compartment_a.iter().for_each(|i| *item_count.entry(i).or_insert(0) += 1);
-        // self.compartment_b.iter().for_each(|i| *item_count.entry(i).or_insert(0) += 1);
-        // item_count.iter().filter(|(i, &c)| c > 1).map(|(i, _)| *i).collect()
-
-        let comp_a_set = HashSet::<_>::from_iter(self.compartment_a.iter());
-        let dedup =
-            HashSet::<_>::from_iter(self.compartment_b.iter().filter(|b| comp_a_set.contains(b)));
-        dedup.iter().map(|c| *c).collect()
-    }
-
-    pub fn overlaps<'a>(&'a self, contents_b: &'a Vec<&char>) -> Vec<&'a char> {
-        let self_invent = HashSet::<_>::from_iter(self.contents());
-        let other_invent = HashSet::<_>::from_iter(contents_b.iter().map(|i| *i));
-        self_invent
-            .intersection(&other_invent)
-            .map(|c| *c)
-            .collect()
-    }
 
     pub fn contents(&self) -> Vec<&char> {
         self.compartment_a

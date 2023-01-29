@@ -1,5 +1,5 @@
 use core::fmt;
-use std::{error::Error, num::ParseIntError, ops::Index};
+use std::error::Error;
 
 // thanks https://stackoverflow.com/a/70511530
 #[derive(Debug)]
@@ -23,11 +23,6 @@ impl<T> Vec2d<T> {
     pub fn index(&self, row: usize, col: usize) -> &T {
         let i = self.col * row;
         &self.vec[i + col]
-    }
-
-    pub fn index_mut(&mut self, row: usize, col: usize) -> &mut T {
-        let i = self.col * row;
-        &mut self.vec[i + col]
     }
 }
 

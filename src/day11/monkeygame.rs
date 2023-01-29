@@ -66,12 +66,11 @@ impl MonkeyOp {
 
 #[derive(Debug)]
 pub(crate) struct Monkey {
-    // id: usize,
+    id: usize,
     items: Vec<u64>,
     operation: MonkeyOp,
     test: MonkeyTest,
     inspected_items: usize,
-    id: usize,
 }
 
 impl fmt::Display for Monkey {

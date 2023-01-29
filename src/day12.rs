@@ -232,7 +232,7 @@ pub(crate) fn result(input: String) -> Result<(), Box<dyn Error>> {
 
     let start_points = reverse_distances
         .iter()
-        .filter(|(&k, &v)| k.letter == 'a')
+        .filter(|(&k, _)| k.letter == 'a')
         .sorted_by(|a, b| a.1.cmp(b.1))
         .collect_vec();
     println!("Part 2 - distance: {}", start_points[0].1);

@@ -157,7 +157,7 @@ pub(crate) fn result(ls: Vec<String>) -> Result<(), Box<dyn Error>> {
     let divider_indices: usize = flattened_packets
         .enumerate()
         .filter(|(_, p)| divider_set.contains(&format!("{}", p)))
-        .map(|(i, p)| i + 1)
+        .map(|(i, _)| i + 1)
         .product();
 
     println!("Part2 - {}", divider_indices);

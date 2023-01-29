@@ -17,14 +17,6 @@ impl Shape {
         }
     }
 
-    pub fn from_secret_code(c: &str) -> Result<Shape, &str> {
-        match c {
-            "X" => Ok(Shape::Rock),
-            "Y" => Ok(Shape::Paper),
-            "Z" => Ok(Shape::Scissors),
-            _ => Err("invalid secret code, only X, Y and Z are supported!"),
-        }
-    }
 
     pub fn from_expected_result(r: &GameResult, opponent_move: &Shape) -> Result<Shape, String> {
         let simulated_game = vec![Shape::Rock, Shape::Paper, Shape::Scissors]

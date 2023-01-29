@@ -26,9 +26,6 @@ impl Section {
         }
     }
 
-    fn contains(&self, another: &Section) -> bool {
-        self.start <= another.start && self.end >= another.end
-    }
 
     fn left_overlap(&self, another: &Section) -> bool {
         another.end >= self.start && another.start <= self.end
@@ -68,9 +65,6 @@ impl CleaningAssignment {
         }
     }
 
-    fn pair_fully_contains(&self) -> bool {
-        self.left.contains(&self.right) || self.right.contains(&self.left)
-    }
 
     fn pair_overlap(&self) -> bool {
         self.left.overlap(&self.right)
