@@ -1,5 +1,5 @@
 use core::fmt;
-use std::{collections::HashMap, error::Error, num::ParseIntError};
+use std::error::Error;
 
 use itertools::Itertools;
 
@@ -66,11 +66,12 @@ impl MonkeyOp {
 
 #[derive(Debug)]
 pub(crate) struct Monkey {
-    id: usize,
+    // id: usize,
     items: Vec<u64>,
     operation: MonkeyOp,
     test: MonkeyTest,
     inspected_items: usize,
+    id: usize,
 }
 
 impl fmt::Display for Monkey {
@@ -86,7 +87,7 @@ impl fmt::Display for Monkey {
 impl Monkey {
     pub fn new(id: usize, items: Vec<u64>, op: MonkeyOp, test: MonkeyTest) -> Monkey {
         Monkey {
-            id: id,
+            id,
             items: items,
             operation: op,
             test: test,

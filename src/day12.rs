@@ -220,7 +220,7 @@ pub(crate) fn result(input: String) -> Result<(), Box<dyn Error>> {
     // let ns = v.neighbours(40);
 
     let g1 = Graph::new(&input, 'S', 'E')?;
-    let ns = g1.adjacency_list.get(&g1.target);
+    // let ns = g1.adjacency_list.get(&g1.target);
     // let to_target2 = g.adjacency_list.get(&Vertex::new(3475, 'y'));
     let distances = dijkstra(&g1);
 

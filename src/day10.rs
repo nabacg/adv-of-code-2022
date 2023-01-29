@@ -1,4 +1,4 @@
-use std::{collections::HashSet, error::Error, num::ParseIntError};
+use std::error::Error;
 
 enum Inst {
     AddX(i32),
@@ -27,30 +27,30 @@ impl Inst {
 }
 
 struct CPU {
-    X: i32,
-    CurrentCycle: u32,
-    SignalRecording: Vec<(u32, i32)>,
-    CRT_output: Vec<char>,
+    x: i32,
+    current_cycle: u32,
+    signal_recording: Vec<(u32, i32)>,
+    crt_output: Vec<char>,
 }
 
 impl CPU {
     fn run(&mut self, i: &Inst) {
-        self.CurrentCycle += 1;
+        self.current_cycle += 1;
         self.check_signal();
         match i {
             Inst::AddX(n) => {
-                self.CurrentCycle += 1;
+                self.current_cycle += 1;
                 self.check_signal();
-                self.X += n;
+                self.x += n;
             }
             Inst::NoOp => {}
         }
     }
 
     fn draw_sprite(&self) -> char {
-        let crt_pixel = (self.CurrentCycle - 1) as i32; // The left-most pixel in each row is in position 0, and the right-most pixel in each row is in position 39.
+        let crt_pixel = (self.current_cycle - 1) as i32; // The left-most pixel in each row is in position 0, and the right-most pixel in each row is in position 39.
         let crt_pixel_norm = crt_pixel % 40; // convert absolute CRT pixel position (0, 239) to current row (0, 39)
-        if crt_pixel_norm.abs_diff(self.X) <= 1 {
+        if crt_pixel_norm.abs_diff(self.x) <= 1 {
             // println!("# - Cycle: {}, X: {}", self.CurrentCycle, self.X);
             '#'
         } else {
@@ -61,21 +61,22 @@ impl CPU {
 
     fn check_signal(&mut self) {
         // println!("check_signal: {}", self.CurrentCycle);
-        if self.CurrentCycle == 20 || (self.CurrentCycle > 20 && (self.CurrentCycle - 20) % 40 == 0)
+        if self.current_cycle == 20
+            || (self.current_cycle > 20 && (self.current_cycle - 20) % 40 == 0)
         {
             // println!("Interesting Signal, Cycle: {}, X:{}", self.CurrentCycle, self.X);
-            self.SignalRecording.push((self.CurrentCycle, self.X));
+            self.signal_recording.push((self.current_cycle, self.x));
         }
 
-        self.CRT_output.push(self.draw_sprite());
+        self.crt_output.push(self.draw_sprite());
 
-        if self.CurrentCycle % 40 == 0 {
-            self.CRT_output.push('\n')
+        if self.current_cycle % 40 == 0 {
+            self.crt_output.push('\n')
         }
     }
 
     fn signal_strengths(&self) -> Vec<i32> {
-        self.SignalRecording
+        self.signal_recording
             .iter()
             .map(|(cc, x)| (*cc as i32) * x)
             .collect()
@@ -83,10 +84,10 @@ impl CPU {
 
     fn new() -> CPU {
         CPU {
-            X: 1,
-            CurrentCycle: 0,
-            SignalRecording: vec![],
-            CRT_output: vec![],
+            x: 1,
+            current_cycle: 0,
+            signal_recording: vec![],
+            crt_output: vec![],
         }
     }
 }
@@ -103,7 +104,7 @@ pub(crate) fn result(ls: Vec<String>) -> Result<(), Box<dyn Error>> {
     let signal_strengths: i32 = cpu.signal_strengths().iter().sum();
     println!("Par1 Result: {}", signal_strengths);
 
-    let crt_out: String = cpu.CRT_output.into_iter().collect();
+    let crt_out: String = cpu.crt_output.into_iter().collect();
     println!("{}", crt_out);
     Ok(())
 }
