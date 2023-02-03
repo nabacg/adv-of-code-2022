@@ -77,8 +77,8 @@ impl fmt::Display for Monkey {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(
             f,
-            "Items: {:?}, Inspected: {}",
-            self.items, self.inspected_items
+            "Id:{}, Items: {:?}, Inspected: {}",
+            self.id, self.items, self.inspected_items
         )
     }
 }
