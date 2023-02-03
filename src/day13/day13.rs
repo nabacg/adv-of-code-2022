@@ -71,7 +71,7 @@ impl PacketPair {
 }
 
 #[derive(Parser)]
-#[grammar = "day13.pest"]
+#[grammar = "day13/day13.pest"]
 struct PacketParser;
 
 impl DataGram {
@@ -99,7 +99,7 @@ impl DataGram {
     }
 }
 
-pub(crate) fn result(ls: Vec<String>) -> Result<(), Box<dyn Error>> {
+pub fn result(ls: Vec<String>) -> Result<(), Box<dyn Error>> {
     let lines: Result<Vec<PacketPair>, String> = ls
         .into_iter()
         .chunks(3)
