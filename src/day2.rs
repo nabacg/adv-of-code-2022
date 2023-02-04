@@ -17,7 +17,6 @@ impl Shape {
         }
     }
 
-
     pub fn from_expected_result(r: &GameResult, opponent_move: &Shape) -> Result<Shape, String> {
         let simulated_game = vec![Shape::Rock, Shape::Paper, Shape::Scissors]
             .iter()

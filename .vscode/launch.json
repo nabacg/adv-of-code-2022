@@ -17,7 +17,7 @@
                 ]
             },
             // "args": ["day12", "inputs/day12/input.txt"],
-            "args": ["day13", "inputs/day13/test_input.txt"],
+            "args": ["day14", "inputs/day14/test2_input.txt"],
             "cwd": "${workspaceFolder}"
         },
     ]

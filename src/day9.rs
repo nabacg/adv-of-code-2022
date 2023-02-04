@@ -186,7 +186,6 @@ impl Rope {
         self.knots = knots;
     }
 
-
     fn print_tail_history(&self) {
         let head = self.head();
         let tail = self.tail();

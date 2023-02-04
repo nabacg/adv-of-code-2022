@@ -19,7 +19,6 @@ impl Rucksack {
         })
     }
 
-
     pub fn contents(&self) -> Vec<&char> {
         self.compartment_a
             .iter()

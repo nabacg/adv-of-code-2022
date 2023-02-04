@@ -26,7 +26,6 @@ impl Section {
         }
     }
 
-
     fn left_overlap(&self, another: &Section) -> bool {
         another.end >= self.start && another.start <= self.end
     }
@@ -64,7 +63,6 @@ impl CleaningAssignment {
             Ok(CleaningAssignment { left: l, right: r })
         }
     }
-
 
     fn pair_overlap(&self) -> bool {
         self.left.overlap(&self.right)
