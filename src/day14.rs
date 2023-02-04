@@ -3,14 +3,14 @@ use itertools::Itertools;
 use std::{collections::HashSet, error::Error, num::ParseIntError};
 
 struct RockPath {
-    path_lines: Vec<((u32, u32), (u32, u32))>,
-    lowest_level: u32,
-    left_most: u32,
-    right_most: u32,
+    path_lines: Vec<((i32, i32), (i32, i32))>,
+    lowest_level: i32,
+    left_most: i32,
+    right_most: i32,
 }
 
 impl RockPath {
-    fn is_blocked(&self, (p_x, p_y): (u32, u32)) -> bool {
+    fn is_blocked(&self, (p_x, p_y): (i32, i32)) -> bool {
         self.path_lines.iter().any(|((e_x, e_y), (s_x, s_y))| {
             let r = (s_x <= &p_x && &p_x <= e_x || e_x <= &p_x && &p_x <= s_x)
                 && (e_y <= &p_y && &p_y <= s_y || s_y <= &p_y && &p_y <= e_y);
@@ -19,16 +19,16 @@ impl RockPath {
         })
     }
 
-    fn new(p: Vec<(u32, u32)>) -> RockPath {
+    fn new(p: Vec<(i32, i32)>) -> RockPath {
         let lowest_level = *p.iter().map(|(_, y)| y).max().unwrap();
-        let left_most = *p.iter().map(|(x, _)| x).min().unwrap();
-        let right_most = *p.iter().map(|(x, _)| x).max().unwrap();
+        let left_most = *p.iter().map(|(x, _)| x).filter(|&x| x > &i32::MIN).min().unwrap();
+        let right_most = *p.iter().map(|(x, _)| x).filter(|&x| x < &i32::MAX).max().unwrap();
         let path_lines = p
             .iter()
             .zip(p.iter().skip(1))
             .into_iter()
             .map(|(&s, &e)| (s, e))
-            .collect::<Vec<((u32, u32), (u32, u32))>>();
+            .collect::<Vec<((i32, i32), (i32, i32))>>();
         RockPath {
             path_lines,
             lowest_level,
@@ -38,15 +38,15 @@ impl RockPath {
     }
 }
 
-type Sand = (u32, u32);
+type Sand = (i32, i32);
 
 struct Cave {
-    sand_units: HashSet<(u32, u32)>,
+    sand_units: HashSet<(i32, i32)>,
     rock_paths: Vec<RockPath>,
     sand_unit_total: usize,
-    bottom_level: u32,
-    left_most: u32,
-    right_most: u32,
+    bottom_level: i32,
+    left_most: i32,
+    right_most: i32,
 }
 
 impl fmt::Display for Cave {
@@ -64,8 +64,11 @@ impl fmt::Display for Cave {
                 .join("")
         )
         .expect("failed to write to fmt:Formatter");
-        for y in 0..self.bottom_level + 1 {
-            let line = (self.left_most..self.right_most)
+
+        let left_bound =  self.left_most.min(self.sand_units.iter().map(|(x,_)| *x).min().or(Some(self.left_most)).unwrap());
+        let right_bound =  self.right_most.min(self.sand_units.iter().map(|(x,_)| *x).max().or(Some(self.right_most)).unwrap());
+        for y in 0..self.bottom_level + 3 {
+            let line = (left_bound-5..right_bound+15)
                 .into_iter()
                 .map(|x| match x {
                     x if self.sand_units.contains(&(x, y)) => 'o',
@@ -116,19 +119,23 @@ impl Cave {
         }
     }
 
-    fn is_free(&self, y: (u32, u32)) -> bool {
+    fn is_free(&self, y: (i32, i32)) -> bool {
         !self.sand_units.contains(&y) && self.rock_paths.iter().all(|p| !p.is_blocked(y))
     }
 
-    fn above_bottom_rock(&self, (_, y): (u32, u32)) -> bool {
+    fn above_bottom_rock(&self, (_, y): (i32, i32)) -> bool {
         y <= self.bottom_level
     }
 
-    pub(crate) fn new(paths: Vec<Vec<(u32, u32)>>) -> Cave {
-        let rock_paths: Vec<RockPath> = paths.into_iter().map(|p| RockPath::new(p)).collect();
+    pub(crate) fn new(paths: Vec<Vec<(i32, i32)>>) -> Cave {
+        let mut rock_paths: Vec<RockPath> = paths.into_iter().map(|p| RockPath::new(p)).collect();
         let bottom_level = rock_paths.iter().map(|rp| rp.lowest_level).max().unwrap();
         let left_most = rock_paths.iter().map(|rp| rp.left_most).min().unwrap();
         let right_most = rock_paths.iter().map(|rp| rp.right_most).max().unwrap();
+        // bottom floor
+        rock_paths.push(RockPath::new(vec![(i32::MIN,bottom_level+2), (i32::MAX, bottom_level+2)]));
+
+
         Cave {
             sand_units: HashSet::new(),
             rock_paths,
@@ -140,11 +147,11 @@ impl Cave {
     }
 }
 
-fn parse_point(p: &str) -> Result<(u32, u32), String> {
+fn parse_point(p: &str) -> Result<(i32, i32), String> {
     let ps = p
         .split(",")
-        .map(|i| i.parse::<u32>())
-        .collect::<Result<Vec<u32>, ParseIntError>>();
+        .map(|i| i.parse::<i32>())
+        .collect::<Result<Vec<i32>, ParseIntError>>();
 
     ps.map_err(|s| format!("{}", s))?
         .into_iter()
@@ -153,32 +160,33 @@ fn parse_point(p: &str) -> Result<(u32, u32), String> {
 }
 
 pub(crate) fn result(lines: Vec<String>) -> Result<(), Box<dyn Error>> {
-    let paths: Result<Vec<Vec<(u32, u32)>>, String> = lines
+    let paths: Result<Vec<Vec<(i32, i32)>>, String> = lines
         .iter()
         .map(|l| {
             l.split(" -> ")
                 .map(parse_point)
-                .collect::<Result<Vec<(u32, u32)>, String>>()
+                .collect::<Result<Vec<(i32, i32)>, String>>()
         })
         .collect();
 
     // println!("input: {:?}", paths);
+ 
     let mut c: Cave = Cave::new(paths?);
 
     loop {
         // println!("next sand enters");
         let s = c.move_sand();
         // print!("\x1B[2J");  // clear terminal
-        // println!("{}", c);
+        //  println!("{}", c);
 
-        if !c.above_bottom_rock(s) {
+        if  s == (500,0) {
             println!("breaking");
             break;
         }
     }
 
-    println!("{}", c);
-    println!("Part1 result: {}", c.sand_unit_total - 1);
+    //println!("{}", c);
+    println!("Part1 result: {}", c.sand_unit_total);
 
     Ok(())
 }
