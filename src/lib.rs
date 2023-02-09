@@ -10,6 +10,7 @@ mod day11;
 mod day12;
 mod day13;
 mod day14;
+mod day15;
 mod day2;
 mod day3;
 mod day4;
@@ -45,6 +46,7 @@ pub fn print_result(aoc_day: &String, input_path: &String) -> Result<(), Box<dyn
         "day12" => day12::result(fs::read_to_string(input_path)?),
         "day13" => day13::result(read_lines(input_path)?),
         "day14" => day14::result(read_lines(input_path)?),
+        "day15" => day15::result(read_lines(input_path)?),
         _d => Err(format!("Not implemented Advent Of Code Day selected: {}, currently only [day1,day2] are supported ", aoc_day).into()),        
     }
 }
